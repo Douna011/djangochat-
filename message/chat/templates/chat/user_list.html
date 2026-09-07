@@ -1,5 +1,609 @@
-{% for user in users %}
-    <p>{{ user.username }} 
-       <a href="{% url 'chat' user.id %}">Chat</a>
-    </p>
-{% endfor %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Users</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4361ee',
+                        secondary: '#3a0ca3',
+                        accent: '#4cc9f0',
+                        danger: '#ef4444',
+                        success: '#10b981',
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                        'slide-down': 'slideDown 0.4s ease-out',
+                        'pulse-slow': 'pulse 3s infinite',
+                        'bounce-slow': 'bounce 2s infinite',
+                        'float': 'float 3s ease-in-out infinite',
+                        'shimmer': 'shimmer 2s infinite linear',
+                        'wiggle': 'wiggle 0.5s ease-in-out',
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        slideDown: {
+                            '0%': { transform: 'translateY(-20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' },
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' },
+                        },
+                        shimmer: {
+                            '0%': { backgroundPosition: '-200px 0' },
+                            '100%': { backgroundPosition: '200px 0' },
+                        },
+                        wiggle: {
+                            '0%, 100%': { transform: 'rotate(-3deg)' },
+                            '50%': { transform: 'rotate(3deg)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom animations */
+        .user-card:hover {
+            transform: translateY(-5px);
+            transition: transform 0.3s ease;
+        }
+        
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .avatar-ring {
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .avatar-ring:hover {
+            box-shadow: 0 0 0 5px rgba(67, 97, 238, 0.3);
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .search-glow:focus {
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        /* Staggered animation delay for user cards */
+        .stagger-animation:nth-child(1) { animation-delay: 0.1s; }
+        .stagger-animation:nth-child(2) { animation-delay: 0.2s; }
+        .stagger-animation:nth-child(3) { animation-delay: 0.3s; }
+        .stagger-animation:nth-child(4) { animation-delay: 0.4s; }
+        .stagger-animation:nth-child(5) { animation-delay: 0.5s; }
+        .stagger-animation:nth-child(6) { animation-delay: 0.6s; }
+        .stagger-animation:nth-child(7) { animation-delay: 0.7s; }
+        .stagger-animation:nth-child(8) { animation-delay: 0.8s; }
+        .stagger-animation:nth-child(9) { animation-delay: 0.9s; }
+        .stagger-animation:nth-child(10) { animation-delay: 1.0s; }
+        
+        /* Loading shimmer effect */
+        .shimmer-bg {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200px 100%;
+            animation: shimmer 2s infinite linear;
+        }
+        
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+    <div class="max-w-6xl mx-auto p-4 md:p-6">
+        <!-- Header -->
+        <header class="mb-10 animate-slide-down">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Chat Users</h1>
+                    <p class="text-gray-600">Connect with your friends and colleagues</p>
+                </div>
+                <div class="mt-4 md:mt-0 flex items-center space-x-3">
+                    <!-- User info and logout button -->
+                    <div class="flex items-center space-x-4">
+                        <!-- User display -->
+                        {% if user.is_authenticated %}
+                        <div class="flex items-center space-x-2 bg-blue-50 px-3 py-2 rounded-lg">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-r from-primary to-accent flex items-center justify-center text-white font-bold">
+                                {{ user.username|first|upper }}
+                            </div>
+                            <div>
+                                <p class="font-medium text-gray-800">{{ user.username }}</p>
+                                <p class="text-xs text-gray-600">Online</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Action buttons -->
+                        <div class="flex space-x-2">
+                            <button id="new-group-btn" class="bg-white text-primary border border-primary hover:bg-primary hover:text-white px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105">
+                                <i class="fas fa-users mr-2"></i>New Group
+                            </button>
+                            <button class="bg-primary text-white hover:bg-secondary px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105">
+                                <i class="fas fa-user-plus mr-2"></i>Add User
+                            </button>
+                            
+                            <!-- Logout button -->
+                            {% if user.is_authenticated %}
+                            <form action="{% url 'logout' %}" method="post" class="inline">
+                                {% csrf_token %}
+                                <button type="submit" 
+                                        class="bg-danger text-white hover:bg-red-700 px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
+                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                </button>
+                            </form>
+                            {% else %}
+                            <a href="{% url 'login' %}" 
+                               class="bg-primary text-white hover:bg-secondary px-4 py-2 rounded-lg transition-all duration-300 transform hover:scale-105 flex items-center justify-center">
+                                <i class="fas fa-sign-in-alt mr-2"></i>Login
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats & Search -->
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
+                <div class="flex items-center space-x-6">
+                    <div class="bg-white rounded-xl p-3 shadow-sm">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-blue-50 rounded-lg">
+                                <i class="fas fa-user-friends text-primary text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Online Users</p>
+                                <p class="text-xl font-bold text-gray-800" id="online-count">5</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-xl p-3 shadow-sm">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-green-50 rounded-lg">
+                                <i class="fas fa-comments text-green-500 text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Total Users</p>
+                                <p class="text-xl font-bold text-gray-800">{{ users|length }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% if user.is_authenticated %}
+                    <div class="bg-white rounded-xl p-3 shadow-sm">
+                        <div class="flex items-center space-x-3">
+                            <div class="p-2 bg-purple-50 rounded-lg">
+                                <i class="fas fa-user text-purple-500 text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500">Logged in as</p>
+                                <p class="text-xl font-bold text-gray-800">{{ user.username }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="relative w-full md:w-auto">
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            id="user-search" 
+                            placeholder="Search users..." 
+                            class="pl-12 pr-4 py-3 w-full md:w-64 lg:w-80 bg-white rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent search-glow transition-all duration-300"
+                        >
+                        <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <button id="clear-search" class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 hidden">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- User List -->
+        <main class="animate-fade-in">
+            <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
+                <div class="p-4 border-b border-gray-200">
+                    <h2 class="text-xl font-semibold text-gray-800">All Users</h2>
+                </div>
+                
+                <div class="p-4 overflow-y-auto max-h-[500px] custom-scrollbar">
+                    {% if users %}
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {% for user in users %}
+                            <!-- User Card with staggered animation -->
+                            <div class="user-card stagger-animation animate-slide-up bg-white border border-gray-200 rounded-xl p-4 hover:shadow-xl transition-all duration-300">
+                                <div class="flex items-start justify-between">
+                                    <div class="flex items-center space-x-3">
+                                        <!-- Avatar with status -->
+                                        <div class="relative">
+                                            <div class="avatar-ring w-14 h-14 rounded-full flex items-center justify-center text-white font-bold text-xl"
+                                                style="background: linear-gradient(135deg, #{{ user.id|add:100 }}ee, #{{ user.id|add:50 }}aa);">
+                                                {{ user.username|first|upper }}
+                                            </div>
+                                            <!-- Online/Offline Status -->
+                                            <div class="absolute bottom-0 right-0 w-4 h-4 rounded-full border-2 border-white
+                                                {% cycle 'bg-green-500' 'bg-yellow-500' 'bg-gray-400' 'bg-green-500' 'bg-red-500' as status %}">
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- User Info -->
+                                        <div class="flex-1">
+                                            <div class="flex items-center space-x-2">
+                                                <h3 class="font-semibold text-gray-800">{{ user.username }}</h3>
+                                                {% if forloop.counter <= 2 %}
+                                                <span class="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full font-medium">Online</span>
+                                                {% endif %}
+                                            </div>
+                                            <p class="text-sm text-gray-500 mt-1">
+                                                {% cycle 'Last seen: Just now' 'Active 5 min ago' 'Last seen: Yesterday' 'Active now' 'Last seen: 2 days ago' as last_seen %}
+                                            </p>
+                                            <div class="flex items-center mt-2">
+                                                <div class="text-xs text-gray-400">
+                                                    <i class="fas fa-comment-alt mr-1"></i>
+                                                    {% cycle '12' '5' '0' '23' '7' as message_count %} messages
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Chat Button -->
+                                    <a href="{% url 'chat' user.id %}" 
+                                       class="chat-btn group flex-shrink-0 bg-primary hover:bg-secondary text-white p-3 rounded-xl transition-all duration-300 transform hover:scale-110 hover:rotate-3">
+                                        <div class="flex items-center justify-center">
+                                            <i class="fas fa-comment-dots text-lg"></i>
+                                            <span class="ml-2 hidden lg:inline font-medium">Chat</span>
+                                        </div>
+                                        <div class="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs font-bold animate-pulse-slow hidden group-hover:flex">
+                                            <i class="fas fa-bolt text-xs"></i>
+                                        </div>
+                                    </a>
+                                </div>
+                                
+                                <!-- Recent Activity (Optional) -->
+                                <div class="mt-4 pt-4 border-t border-gray-100">
+                                    <div class="flex items-center justify-between text-xs">
+                                        <span class="text-gray-500">Recent activity:</span>
+                                        <span class="font-medium text-gray-700">
+                                            {% cycle 'Typing...' 'Sent a photo' 'Liked a message' 'Called' 'No activity' %}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <!-- Empty State -->
+                        <div class="text-center py-16 animate-pulse-slow">
+                            <div class="mx-auto w-24 h-24 rounded-full bg-gradient-to-r from-gray-100 to-gray-200 flex items-center justify-center mb-6">
+                                <i class="fas fa-user-friends text-4xl text-gray-400"></i>
+                            </div>
+                            <h3 class="text-xl font-semibold text-gray-700 mb-2">No users found</h3>
+                            <p class="text-gray-500 max-w-md mx-auto mb-6">There are no users to chat with yet. Try adding some users or check back later.</p>
+                            {% if not user.is_authenticated %}
+                            <a href="{% url 'login' %}" class="bg-primary text-white hover:bg-secondary px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105 inline-block">
+                                <i class="fas fa-sign-in-alt mr-2"></i>Login to Continue
+                            </a>
+                            {% else %}
+                            <button class="bg-primary text-white hover:bg-secondary px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105">
+                                <i class="fas fa-user-plus mr-2"></i>Invite Users
+                            </button>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Loading Skeleton (hidden by default) -->
+            <div id="loading-skeleton" class="hidden">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+                    {% for i in "123456"|make_list %}
+                    <div class="bg-white border border-gray-200 rounded-xl p-4">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="shimmer-bg w-14 h-14 rounded-full"></div>
+                                <div class="space-y-2">
+                                    <div class="shimmer-bg h-4 w-32 rounded"></div>
+                                    <div class="shimmer-bg h-3 w-24 rounded"></div>
+                                    <div class="shimmer-bg h-3 w-20 rounded"></div>
+                                </div>
+                            </div>
+                            <div class="shimmer-bg w-12 h-12 rounded-xl"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="mt-10 pt-6 border-t border-gray-200 text-center text-gray-500 text-sm animate-fade-in">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p>Chat App • v2.0</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="#" class="text-gray-500 hover:text-primary transition-colors duration-300">
+                        <i class="fab fa-github"></i>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-primary transition-colors duration-300">
+                        <i class="fas fa-question-circle"></i> Help
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-primary transition-colors duration-300">
+                        <i class="fas fa-cog"></i> Settings
+                    </a>
+                </div>
+            </div>
+            <p class="mt-4">
+                Connected to <span class="text-green-500 font-medium">Chat Server</span> • 
+                <span id="connection-status">All systems operational</span>
+                {% if user.is_authenticated %}
+                • Logged in as <span class="text-primary font-medium">{{ user.username }}</span>
+                {% endif %}
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Search functionality
+            const searchInput = document.getElementById('user-search');
+            const clearSearchBtn = document.getElementById('clear-search');
+            const userCards = document.querySelectorAll('.user-card');
+            const onlineCount = document.getElementById('online-count');
+            
+            // Show clear button when typing
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    if (this.value.length > 0) {
+                        clearSearchBtn.classList.remove('hidden');
+                    } else {
+                        clearSearchBtn.classList.add('hidden');
+                    }
+                    
+                    // Filter user cards based on search
+                    const searchTerm = this.value.toLowerCase();
+                    let visibleCount = 0;
+                    
+                    userCards.forEach(card => {
+                        const username = card.querySelector('h3').textContent.toLowerCase();
+                        if (username.includes(searchTerm)) {
+                            card.style.display = 'block';
+                            card.classList.add('animate-fade-in');
+                            visibleCount++;
+                        } else {
+                            card.style.display = 'none';
+                        }
+                    });
+                    
+                    // Update online count (simulated)
+                    onlineCount.textContent = Math.min(5, Math.floor(visibleCount / 2));
+                });
+            }
+            
+            // Clear search
+            if (clearSearchBtn) {
+                clearSearchBtn.addEventListener('click', function() {
+                    searchInput.value = '';
+                    this.classList.add('hidden');
+                    
+                    userCards.forEach(card => {
+                        card.style.display = 'block';
+                        card.classList.add('animate-fade-in');
+                    });
+                    
+                    onlineCount.textContent = 5;
+                });
+            }
+            
+            // Chat button hover effects
+            const chatButtons = document.querySelectorAll('.chat-btn');
+            chatButtons.forEach(button => {
+                button.addEventListener('mouseenter', function() {
+                    this.classList.add('animate-pulse');
+                });
+                
+                button.addEventListener('mouseleave', function() {
+                    this.classList.remove('animate-pulse');
+                });
+                
+                // Click animation
+                button.addEventListener('click', function(e) {
+                    // Add ripple effect
+                    const ripple = document.createElement('span');
+                    const rect = this.getBoundingClientRect();
+                    const size = Math.max(rect.width, rect.height);
+                    const x = e.clientX - rect.left - size / 2;
+                    const y = e.clientY - rect.top - size / 2;
+                    
+                    ripple.style.cssText = `
+                        position: absolute;
+                        border-radius: 50%;
+                        background: rgba(255, 255, 255, 0.7);
+                        transform: scale(0);
+                        animation: ripple 0.6s linear;
+                        width: ${size}px;
+                        height: ${size}px;
+                        top: ${y}px;
+                        left: ${x}px;
+                        pointer-events: none;
+                    `;
+                    
+                    this.appendChild(ripple);
+                    
+                    // Remove ripple after animation
+                    setTimeout(() => {
+                        ripple.remove();
+                    }, 600);
+                    
+                    // Simulate loading before navigation (in real app this would be instant)
+                    const card = this.closest('.user-card');
+                    if (card) {
+                        card.classList.add('opacity-70');
+                        card.style.transform = 'scale(0.98)';
+                        
+                        setTimeout(() => {
+                            card.classList.remove('opacity-70');
+                            card.style.transform = '';
+                        }, 300);
+                    }
+                });
+            });
+            
+            // Add CSS for ripple animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes ripple {
+                    to {
+                        transform: scale(4);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Simulate connection status changes
+            const connectionStatus = document.getElementById('connection-status');
+            if (connectionStatus) {
+                const statuses = [
+                    { text: 'All systems operational', color: 'text-green-500' },
+                    { text: 'Connecting...', color: 'text-yellow-500' },
+                    { text: 'High latency', color: 'text-orange-500' },
+                    { text: 'Reconnecting', color: 'text-red-500' }
+                ];
+                
+                let index = 0;
+                setInterval(() => {
+                    index = (index + 1) % statuses.length;
+                    connectionStatus.textContent = statuses[index].text;
+                    connectionStatus.className = statuses[index].color + ' font-medium';
+                    
+                    // Add pulse animation for reconnecting
+                    if (index === 3) {
+                        connectionStatus.classList.add('animate-pulse');
+                    } else {
+                        connectionStatus.classList.remove('animate-pulse');
+                    }
+                }, 8000);
+            }
+            
+            // New group button animation
+            const newGroupBtn = document.getElementById('new-group-btn');
+            if (newGroupBtn) {
+                newGroupBtn.addEventListener('click', function() {
+                    this.classList.add('animate-bounce-slow');
+                    
+                    // Create floating emojis
+                    const emojis = ['👥', '💬', '🎉', '✨'];
+                    for (let i = 0; i < 4; i++) {
+                        const emoji = document.createElement('div');
+                        emoji.textContent = emojis[i];
+                        emoji.className = 'absolute text-2xl pointer-events-none animate-float';
+                        emoji.style.left = `${20 + i * 15}px`;
+                        emoji.style.top = '-30px';
+                        emoji.style.animationDelay = `${i * 0.2}s`;
+                        
+                        this.appendChild(emoji);
+                        
+                        // Remove after animation
+                        setTimeout(() => {
+                            emoji.remove();
+                        }, 2000);
+                    }
+                    
+                    setTimeout(() => {
+                        this.classList.remove('animate-bounce-slow');
+                    }, 1000);
+                });
+            }
+            
+            // Simulate user status updates
+            setInterval(() => {
+                // Randomly change some user statuses
+                const statusDots = document.querySelectorAll('.status-dot');
+                if (statusDots.length > 0) {
+                    const randomIndex = Math.floor(Math.random() * statusDots.length);
+                    const dot = statusDots[randomIndex];
+                    
+                    const statusColors = ['bg-green-500', 'bg-yellow-500', 'bg-red-500', 'bg-gray-400'];
+                    const currentColor = statusColors.find(color => dot.classList.contains(color));
+                    const nextColor = statusColors[(statusColors.indexOf(currentColor) + 1) % statusColors.length];
+                    
+                    if (currentColor) {
+                        dot.classList.remove(currentColor);
+                        dot.classList.add(nextColor);
+                        
+                        // Add pulse animation for status change
+                        dot.classList.add('animate-pulse');
+                        setTimeout(() => {
+                            dot.classList.remove('animate-pulse');
+                        }, 1000);
+                    }
+                }
+            }, 5000);
+            
+            // Add logout confirmation
+            // const logoutBtn = document.querySelector('form[action*="logout"] button[type="submit"]');
+            // if (logoutBtn) {
+            //     logoutBtn.addEventListener('click', function(e) {
+            //         if (!confirm('Are you sure you want to logout?')) {
+            //             e.preventDefault();
+            //             return false;
+            //         }
+                    
+            //         // Add loading animation
+            //         const originalHTML = this.innerHTML;
+            //         this.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Logging out...';
+            //         this.disabled = true;
+                    
+            //         // Reset button after form submission (if not prevented)
+            //         setTimeout(() => {
+            //             this.innerHTML = originalHTML;
+            //             this.disabled = false;
+            //         }, 2000);
+            //     });
+            // }
+        });
+    </script>
+</body>
+</html>

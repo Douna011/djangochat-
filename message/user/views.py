@@ -1,0 +1,42 @@
+
+from django.http import HttpResponseForbidden
+from django.shortcuts import render, redirect
+from .forms import RegisterForm
+from django.contrib.auth import authenticate, login
+from django.contrib import messages
+
+
+def register(request):
+    # 👇 Prevent logged-in users from accessing register page
+    if request.user.is_authenticated:
+        return redirect('user_list')
+
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('login')   # redirect to login after success
+    else:
+        form = RegisterForm()
+
+    return render(request, 'accounts/register.html', {'form': form})
+def login_view(request):
+    if request.user.is_authenticated:
+        return redirect('user_list')
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('user_list')
+        else:
+            messages.error(request, "Invalid username or password")
+
+    return render(request, 'accounts/registration/login.html')
+
+def user_list(request):
+    if not request.user.is_authenticated:
+        return HttpResponseForbidden("<h1>You must login first!</h1>")
