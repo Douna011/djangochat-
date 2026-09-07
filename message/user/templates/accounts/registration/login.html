@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | ChatApp</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#4361ee',
+                        secondary: '#3a0ca3',
+                        accent: '#4cc9f0',
+                        success: '#10b981',
+                        danger: '#ef4444',
+                        dark: '#1f2937'
+                    },
+                    animation: {
+                        'fade-in': 'fadeIn 0.5s ease-in-out',
+                        'slide-up': 'slideUp 0.4s ease-out',
+                        'slide-down': 'slideDown 0.4s ease-out',
+                        'float': 'float 3s ease-in-out infinite',
+                        'pulse-slow': 'pulse 2s infinite',
+                        'gradient': 'gradient 3s ease infinite'
+                    },
+                    keyframes: {
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' }
+                        },
+                        slideUp: {
+                            '0%': { transform: 'translateY(20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        slideDown: {
+                            '0%': { transform: 'translateY(-20px)', opacity: '0' },
+                            '100%': { transform: 'translateY(0)', opacity: '1' }
+                        },
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-10px)' }
+                        },
+                        gradient: {
+                            '0%, 100%': { backgroundPosition: '0% 50%' },
+                            '50%': { backgroundPosition: '100% 50%' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(-45deg, #4361ee, #3a0ca3, #4cc9f0, #7209b7);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .input-glow:focus {
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .btn-glow {
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+        }
+        
+        .btn-glow:hover {
+            box-shadow: 0 6px 20px rgba(67, 97, 238, 0.4);
+        }
+    </style>
+</head>
+<body class="min-h-screen gradient-bg flex items-center justify-center p-4">
+    <div class="max-w-4xl w-full flex flex-col md:flex-row rounded-2xl overflow-hidden shadow-2xl animate-fade-in">
+        <!-- Left Side - Welcome & Info -->
+        <div class="md:w-2/5 bg-gradient-to-br from-primary to-secondary text-white p-8 md:p-12 flex flex-col justify-center relative overflow-hidden">
+            <!-- Floating Elements -->
+            <div class="absolute top-10 left-10 w-20 h-20 rounded-full bg-white/10 animate-float" style="animation-delay: 0.2s;"></div>
+            <div class="absolute bottom-20 right-10 w-16 h-16 rounded-full bg-white/10 animate-float" style="animation-delay: 0.5s;"></div>
+            <div class="absolute top-1/2 left-1/3 w-12 h-12 rounded-full bg-white/10 animate-float" style="animation-delay: 0.8s;"></div>
+            
+            <div class="relative z-10">
+                <a href="#" class="inline-flex items-center space-x-2 mb-8 hover:opacity-80 transition-opacity duration-300">
+                    <div class="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-comments text-xl"></i>
+                    </div>
+                    <span class="text-xl font-bold">ChatApp</span>
+                </a>
+                
+                <h1 class="text-3xl md:text-4xl font-bold mb-4">Welcome Back</h1>
+                <p class="text-white/80 mb-8">Sign in to continue your conversations and connect with friends.</p>
+                
+                <div class="space-y-4">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <span>Connect with thousands of users</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <span>Secure & encrypted messaging</span>
+                    </div>
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <span>Real-time communication</span>
+                    </div>
+                </div>
+                
+                <div class="mt-12 pt-8 border-t border-white/20">
+                    <p class="text-sm text-white/70">Don't have an account?</p>
+                    <a href="{% url 'register' %}" class="inline-flex items-center space-x-2 mt-2 text-white hover:text-white/80 transition-colors duration-300">
+                        <span class="font-semibold">Create your account</span>
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right Side - Login Form -->
+        <div class="md:w-3/5 bg-white p-8 md:p-12 flex flex-col justify-center">
+            {% if next %}
+            <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg animate-slide-down">
+                <div class="flex items-center space-x-2 text-red-600">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <p class="font-medium">Please login to continue.</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="mb-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-gray-800">Sign In to Your Account</h2>
+                <p class="text-gray-600 mt-2">Enter your credentials to access your account</p>
+            </div>
+            
+            <form method="POST" class="space-y-6">
+                {% csrf_token %}
+                
+                <!-- Error Messages -->
+                {% if form.errors %}
+                <div class="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div class="flex items-center space-x-2 text-red-600 mb-2">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span class="font-medium">Login Error</span>
+                    </div>
+                    <p class="text-red-600 text-sm">Please enter a correct username and password.</p>
+                </div>
+                {% endif %}
+                
+                <!-- Username Field -->
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">
+                        <i class="fas fa-user mr-2 text-gray-400"></i>
+                        Username
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="text" 
+                            name="username" 
+                            required 
+                            class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent input-glow transition-all duration-300"
+                            placeholder="Enter your username"
+                        >
+                        <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Password Field -->
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-sm font-medium text-gray-700">
+                            <i class="fas fa-lock mr-2 text-gray-400"></i>
+                            Password
+                        </label>
+                        <a href="#" class="text-sm text-primary hover:text-secondary transition-colors duration-300">
+                            Forgot password?
+                        </a>
+                    </div>
+                    <div class="relative">
+                        <input 
+                            type="password" 
+                            name="password" 
+                            required 
+                            class="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent input-glow transition-all duration-300"
+                            placeholder="Enter your password"
+                        >
+                        <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <button type="button" id="togglePassword" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Remember Me -->
+                <div class="flex items-center">
+                    <input 
+                        type="checkbox" 
+                        id="remember" 
+                        name="remember"
+                        class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded"
+                    >
+                    <label for="remember" class="ml-2 text-sm text-gray-600">Remember me</label>
+                </div>
+                
+                <!-- Submit Button -->
+                <button 
+                    type="submit" 
+                    class="w-full bg-gradient-to-r from-primary to-secondary text-white py-3 rounded-lg font-semibold hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300 btn-glow flex items-center justify-center"
+                >
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Sign In
+                </button>
+                
+                <!-- Divider -->
+                <div class="relative flex items-center justify-center my-6">
+                    <div class="flex-1 border-t border-gray-300"></div>
+                    <span class="px-4 text-gray-500 text-sm">Or continue with</span>
+                    <div class="flex-1 border-t border-gray-300"></div>
+                </div>
+                
+                <!-- Social Login -->
+                <div class="grid grid-cols-2 gap-3">
+                    <button type="button" class="flex items-center justify-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-300">
+                        <i class="fab fa-google text-red-500"></i>
+                        <span class="text-sm font-medium">Google</span>
+                    </button>
+                    <button type="button" class="flex items-center justify-center space-x-2 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-300">
+                        <i class="fab fa-github text-gray-800"></i>
+                        <span class="text-sm font-medium">GitHub</span>
+                    </button>
+                </div>
+            </form>
+            
+            <!-- Footer -->
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <p class="text-center text-gray-600 text-sm">
+                    By signing in, you agree to our 
+                    <a href="#" class="text-primary hover:text-secondary transition-colors duration-300">Terms</a> and 
+                    <a href="#" class="text-primary hover:text-secondary transition-colors duration-300">Privacy Policy</a>
+                </p>
+                <p class="text-center text-gray-500 text-sm mt-4">
+                    Need help? 
+                    <a href="#" class="text-primary hover:text-secondary transition-colors duration-300">Contact Support</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Toggle password visibility
+            const togglePassword = document.getElementById('togglePassword');
+            const passwordInput = document.querySelector('input[name="password"]');
+            
+            if (togglePassword && passwordInput) {
+                togglePassword.addEventListener('click', function() {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
+                    this.innerHTML = type === 'password' ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+                });
+            }
+            
+            // Add focus effects to inputs
+            const inputs = document.querySelectorAll('input[type="text"], input[type="password"]');
+            inputs.forEach(input => {
+                // Add focus effect
+                input.addEventListener('focus', function() {
+                    this.parentElement.classList.add('ring-2', 'ring-primary', 'ring-opacity-30');
+                });
+                
+                // Remove focus effect
+                input.addEventListener('blur', function() {
+                    this.parentElement.classList.remove('ring-2', 'ring-primary', 'ring-opacity-30');
+                });
+            });
+            
+            // Form submission animation
+            const form = document.querySelector('form');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const submitBtn = this.querySelector('button[type="submit"]');
+                    if (submitBtn) {
+                        // Disable button and show loading
+                        submitBtn.disabled = true;
+                        const originalText = submitBtn.innerHTML;
+                        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Signing in...';
+                        
+                        // Re-enable after 3 seconds (in case of error)
+                        setTimeout(() => {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalText;
+                        }, 3000);
+                    }
+                });
+            }
+            
+            // Add floating animation to decorative circles
+            const circles = document.querySelectorAll('.absolute.rounded-full');
+            circles.forEach((circle, index) => {
+                circle.style.animationDelay = `${index * 0.5}s`;
+            });
+            
+            // Demo credentials hint (remove in production)
+            const demoHint = document.createElement('div');
+            demoHint.className = 'fixed bottom-4 left-4 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow-lg animate-slide-up hidden md:block';
+            demoHint.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-lightbulb text-yellow-500"></i>
+                    <span class="text-sm text-gray-700">Try: <strong>demo</strong> / <strong>demo123</strong></span>
+                </div>
+            `;
+            document.body.appendChild(demoHint);
+            
+            // Remove demo hint after 10 seconds
+            setTimeout(() => {
+                demoHint.classList.add('opacity-0', 'transition-opacity', 'duration-300');
+                setTimeout(() => demoHint.remove(), 300);
+            }, 10000);
+        });
+    </script>
+</body>
+</html>

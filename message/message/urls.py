@@ -21,5 +21,7 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('chat/', include('chat.urls')),   # <-- correct
+    # path('register/', include('user.urls')),
+    path('', include('user.urls')),  # Set user app as the root URL
 ]
 

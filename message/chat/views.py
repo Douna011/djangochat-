@@ -4,12 +4,12 @@ from django.contrib.auth.models import User
 from .models import Message
 from .utils import get_or_create_room
 
-# @login_required
+@login_required(login_url='/accounts/login/')
 def user_list(request):
     users = User.objects.exclude(id=request.user.id)  # Don't show yourself
     return render(request, 'chat/user_list.html', {'users': users})
 
-# @login_required
+@login_required(login_url='/accounts/login/')
 def chat_view(request, user_id):
     other_user = get_object_or_404(User, id=user_id)
     room = get_or_create_room(request.user, other_user)
